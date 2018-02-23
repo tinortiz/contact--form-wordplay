@@ -1,0 +1,129 @@
+<?php
+/*
+Plugin Name: Formulario de contacto wordplay
+*/
+<?php
+/*
+Plugin Name: Mi plugin de funciones
+*/
+		//Si se envía el formulario ...
+		if(isset($_POST['submitted'])) {
+			if(trim($_POST['checking']) !== '') {
+				$captchaError = true;
+			} else {
+			if(trim($_POST['contactName']) === '') {
+				$nameError = 'Por favor añade el nombre';
+				$hasError = true;
+			} else {
+				$name = trim($_POST['contactName']);
+			}
+			if(trim($_POST['email']) === '')  {
+				$emailError = 'Por favor añade tu email';
+				$hasError = true;
+			} else if (!eregi("^[A-Z0-9._%-]+@[A-Z0-9._%-]+.[A-Z]{2,4}$", trim($_POST['email']))) {
+				$emailError = 'La dirección de email es incorrecta.';
+				$hasError = true;
+			} else {
+				$email = trim($_POST['email']);
+			}
+			if(trim($_POST['comments']) === '') {
+				$commentError = '¿Cuál es tu mensaje? ';
+				$hasError = true;
+			} else {
+			if(function_exists('stripslashes')) {
+				$comments = stripslashes(trim($_POST['comments']));
+			} else {
+				$comments = trim($_POST['comments']);
+			}
+		}
+		if(!isset($hasError)) {
+			$emailTo = ''.$admin_email = get_option('admin_email').'';
+			$subject = 'Formulario Contacto:, '.$name.' - '.$blog_title = get_bloginfo('name').'';
+			$sendCopy = trim($_POST['sendCopy']);
+			$body = "Formulario contacto:,nnName: $name n Email Address: $email n Message: $comments";
+			$headers = 'De: '.$blog_title = get_bloginfo('name').' - Contact Form <'.$emailTo.'>' . "rn" . 'Reply-To: ' . $email;
+			mail($emailTo, $subject, $body, $headers);
+			if($sendCopy == true) {
+				$subject = 'Auto Response - '.$blog_title = get_bloginfo('name').'';
+				$headers = 'De: '.$blog_title = get_bloginfo('name').' ';
+				$bloghome = get_bloginfo('home');
+				$value = get_option('my_field' , '');
+				$body = "Apreciado $name, nn gracias por enviar tu email a través del formulario de contacto de $blog_title nnn Tu email ha sido recibido:nnName: $name n Email Address: $email n Message: $comments nnn Keep In Touch:nnURL: $bloghome nEmail: $admin_email nnnn";
+				mail($email, $subject, $body, $headers);
+			}
+			$emailSent = true;
+		}
+	}
+}
+?>
+
+<div class="contact-wrapper" >
+<?php if(isset($emailSent) && $emailSent == true) { ?>
+	<div class="half-col">
+		<div class="thanks">
+			<h3>Thanks, <?=$name;?></h3>
+			<p>Tu mensaje ha sido enviado correctamente.</p>
+		</div>
+	</div>
+	<?php } else { ?>
+
+	<?php if (have_posts()) : ?>
+		<?php while (have_posts()) : the_post(); ?>
+
+			<?php the_content(); ?>
+
+			<?php if(isset($hasError) || isset($captchaError)) { ?>
+				<p class="error">Ha ocurrido un error al enviar el formulario.<p>
+			<?php } ?>
+
+			<form action="<?php the_permalink(); ?>" id="contactForm" method="post" role="form">
+
+				<ol class="forms">
+					<li>
+						<label class="label">Nombre *</label>
+						<input type="text" name="contactName" id="contactName" value="<?php if(isset($_POST['contactName'])) echo $_POST['contactName'];?>" class="requiredField input" />
+						<?php if($nameError != '') { ?>
+							<span class="error">Añade el nombre</span>
+						<?php } ?>
+					</li>
+
+					<li>
+						<label class="label">Email de contacto *</label>
+						<input type="text" name="email" id="email" value="<?php if(isset($_POST['email']))  echo $_POST['email'];?>" class="requiredField email input" />
+						<?php if($emailError != '') { ?>
+							<span class="error">Añade tu email</span>
+						<?php } ?>
+					</li>
+					<li>
+						<label class="label">Mensaje *</label>
+						<textarea name="comments" id="commentsText"  class="requiredField textarea"><?php if(isset($_POST['comments'])) { if(function_exists('stripslashes')) { echo stripslashes($_POST['comments']); } else { echo $_POST['comments']; } } ?></textarea>
+						<?php if($commentError != '') { ?>
+							<span class="error-textarea" >
+								¿Cuál es el mensaje?
+							</span>
+						<?php } ?>
+					</li>
+					</li>
+
+					<li class="inline">
+						<input type="checkbox" name="sendCopy" id="sendCopy" value="true"<?php if(isset($_POST['sendCopy']) && $_POST['sendCopy'] == true) echo ' checked="checked"'; ?> />
+						<label for="sendCopy">Envíame una copia a mi mismo</label>
+					</li>
+
+					<li class="screenreader">
+						<label for="checking" class="screenReader">No añadas nada en este campo si quieres enviar el formulario</label>
+						<input type="text" name="checking" id="checking" class="screenReader" value="<?php if(isset($_POST['checking']))  echo $_POST['checking'];?>" />
+					</li>
+
+					<li class="buttons">
+						<input type="hidden" name="submitted" id="submitted" value="true" />
+						<button type="submit" class="email-submit">Enviar formulario</button>
+					</li>
+
+				</ol>
+			</form>
+
+		</div>
+		<?php endwhile; ?>
+	<?php endif; ?>
+<?php } ?>
