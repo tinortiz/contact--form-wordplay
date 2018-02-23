@@ -4,8 +4,6 @@ Plugin Name: Formulario de contacto wordplay
 */
 <?php
 /*
-Plugin Name: Mi plugin de funciones
-*/
 		//Si se envía el formulario ...
 		if(isset($_POST['submitted'])) {
 			if(trim($_POST['checking']) !== '') {
